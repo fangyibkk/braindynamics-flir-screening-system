@@ -51,24 +51,28 @@
     .hover\:bg-gray-500:hover {
         background-color: #A0AEC0;
     }
+    .flex {
+        display: flex;
+    }
 </style>
 </head>
 <body>
     <div class="w-screen h-screen bg-gray-100 p-10">
         <div class="container text-center">
-            <div class="m-8">
-            <img src="public/braindynamics-logo.png"/>
-            </div>
-            <div class="m-8">
-            <img src="{{ url_for('video_feed') }}"/>
-            </div>
-            <div>
-                <div>
-                    <h4>Name</h4>
-                    <input type="text">
+            <div class="flex">
+                <div class="m-8">
+                <img src="{{ url_for('video_feed') }}"/>
                 </div>
-                <button class="bg-gray-400 hover:bg-gray-500 text-gray-800 font-bold py-2 px-4 rounded" onclick="httpGet('/capture')">capture</a>
-            </div>
+                <div class="m-8">
+                <img src="public/braindynamics-logo.png"/>
+                <div>
+                    <div>
+                        <h4>Name</h4>
+                        <input type="text">
+                    </div>
+                    <button class="bg-gray-400 hover:bg-gray-500 text-gray-800 font-bold py-2 px-4 rounded" onclick="httpGet('/capture')">capture</a>
+                </div>
+                </div>
         </div>
     </div>
 </body>
