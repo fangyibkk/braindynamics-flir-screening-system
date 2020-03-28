@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset="utf-8" />
+    <title>Hello world</title>
+    <script src="public/script.js"></script>
+<style>
+    .w-screen {
+        width: 100vw;
+    }
+    .h-screen {
+        height: 100vh;
+    }
+    .bg-gray-100 {
+        background-color: #DDDDDD;
+    }
+    .container {
+        width: 80%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .m-8 {
+        margin: 2rem;
+    }
+    .p-10 {
+        padding: 2.5rem;
+    }
+    .text-center {
+        text-align: center;
+    }
+    .text-gray-800 {
+        color: #2d3748;
+    }
+    .px-4 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    .py-2 {
+        padding-top: .5rem;
+        padding-bottom: .5rem;
+    }
+    .font-bold {
+        font-weight: 700;
+    }
+    .rounded {
+        border-radius: .25rem;
+    }
+    .bg-gray-400 {
+        background-color: #CBD5E0;
+    }
+    .hover\:bg-gray-500:hover {
+        background-color: #A0AEC0;
+    }
+</style>
+</head>
+<body>
+    <div class="w-screen h-screen bg-gray-100 p-10">
+        <div class="container text-center">
+            <div class="m-8">
+            <img src="public/braindynamics-logo.png"/>
+            </div>
+            <div class="m-8">
+            <img src="{{ url_for('video_feed') }}"/>
+            </div>
+            <div>
+                <div>
+                    <h4>Name</h4>
+                    <input type="text">
+                </div>
+                <button class="bg-gray-400 hover:bg-gray-500 text-gray-800 font-bold py-2 px-4 rounded" onclick="httpGet('/capture')">capture</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
