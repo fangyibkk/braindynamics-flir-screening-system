@@ -1,79 +1,51 @@
 <!DOCTYPE html>
 <html lang='en'>
+
 <head>
     <meta charset="utf-8" />
     <title>Hello world</title>
     <script src="public/script.js"></script>
-<style>
-    .w-screen {
-        width: 100vw;
-    }
-    .h-screen {
-        height: 100vh;
-    }
-    .bg-gray-100 {
-        background-color: #DDDDDD;
-    }
-    .container {
-        width: 80%;
-        margin-left: auto;
-        margin-right: auto;
-    }
-    .m-8 {
-        margin: 2rem;
-    }
-    .p-10 {
-        padding: 2.5rem;
-    }
-    .text-center {
-        text-align: center;
-    }
-    .text-gray-800 {
-        color: #2d3748;
-    }
-    .px-4 {
-        padding-left: 1rem;
-        padding-right: 1rem;
-    }
-    .py-2 {
-        padding-top: .5rem;
-        padding-bottom: .5rem;
-    }
-    .font-bold {
-        font-weight: 700;
-    }
-    .rounded {
-        border-radius: .25rem;
-    }
-    .bg-gray-400 {
-        background-color: #CBD5E0;
-    }
-    .hover\:bg-gray-500:hover {
-        background-color: #A0AEC0;
-    }
-    .flex {
-        display: flex;
-    }
-</style>
+    <link href="public/tailwind.min.css" rel="stylesheet">
 </head>
+
 <body>
-    <div class="w-screen h-screen bg-gray-100 p-10">
-        <div class="container text-center">
-            <div class="flex">
+    <div class="w-screen h-screen bg-gray-200 p-10">
+        <div class="container mx-auto">
+            <div class="flex items-stretch">
                 <div class="m-8">
-                <img src="{{ url_for('video_feed') }}"/>
+                    <img src="{{ url_for('video_feed') }}"/>
+                    <!-- For no webcam dev -->
+                    <!-- <img src="public/sample-capture-for-dev.jpg" /> -->
                 </div>
                 <div class="m-8">
-                <img src="public/braindynamics-logo.png"/>
-                <div>
-                    <div>
-                        <h4>Name</h4>
-                        <input type="text">
+                    <img class="w-4/5" src="public/braindynamics-logo.png" />
+                    <form class="w-full flex my-8">
+                        <div class="w-1/5">
+                            <label class="block text-gray-700 font-bold text-xl"
+                                for="inline-full-name">
+                                Name
+                            </label>
+                        </div>
+                        <div class="w-3/5 mx-4">
+                            <input
+                                class="bg-gray-100 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
+                                id="inline-full-name" type="text" value="Jane Doe">
+                        </div>
+                        <div class="w-1/5">
+                            <button class="bg-gray-400 hover:bg-gray-500 text-gray-800 rounded font-bold py-2 px-4 mx-auto"
+                                onclick="httpGet('/capture')">Capture</button>
+                        </div>
+                    </form>
+                    <div class="my-8 h-full">
+                        <h3 class="text-xl font-bold text-gray-700 my-4">Logging</h3>
+                        <div class="h-full bg-white rounded p-6">
+                            <p>Save file to ...</p>
+                        </div>
                     </div>
-                    <button class="bg-gray-400 hover:bg-gray-500 text-gray-800 font-bold py-2 px-4 rounded" onclick="httpGet('/capture')">capture</a>
                 </div>
-                </div>
+            </div>
         </div>
     </div>
 </body>
+
 </html>
