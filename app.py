@@ -2,6 +2,7 @@ from flask import Flask, Response, render_template, send_from_directory, jsonify
 from imutils.video import VideoStream
 from threading import Lock, Thread
 from time import sleep
+import os
 import cv2 as cv
 
 # Global variable
@@ -80,14 +81,17 @@ def generate():
 def video_feed():
     return Response(generate(), mimetype = "multipart/x-mixed-replace; boundary=frame")
 
-@app.route('/capture', methods=['GET'])
-def capture():
+@app.route('/capture/<username>', methods=['GET'])
+def capture(username):
     print('GET capture receive')
+    subdirectory = 'capture/%s' % username
     for i in range(10):
         with lock:
             image = vs.read()
-        cv.imwrite('capture/%s-%s.jpg' % ("capture", i), image)
-    return jsonify(success=True)
+        if not os.path.exists(subdirectory):
+            os.makedirs(subdirectory)
+        cv.imwrite('%s/%s-%s.jpg' % (subdirectory, username, i), image)
+    return jsonify(fileList=os.listdir(subdirectory))
      
 
 if __name__ == '__main__':
