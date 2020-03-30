@@ -7,8 +7,12 @@ import cv2 as cv
 
 # Global variable
 output_frame = None
+output_lepton_frame = None
 lock = Lock()
-vs = VideoStream(src=0).start()
+vs = VideoStream(src=2).start()
+#lepton = VideoStream(src=0).start()
+lepton = cv.VideoCapture(0)
+lepton.set(cv.CAP_PROP_FOURCC, cv.VideoWriter_fourcc('M','J','P','G'))
 
 # Constant
 HAAR_CASCADE_PATH = 'model/haarcascade_frontalface_alt.xml'
@@ -49,6 +53,8 @@ def detect_face():
 
         # cv override frame
         cv.rectangle(frame, (rectangle['left'], rectangle['top']), (rectangle['right'], rectangle['bottom']), (0, 0, 255), 2)
+        # default VideoStream() resolution=320 x 240
+        #cv.line(frame, (0,120), (320,120), (0,0,0), 5)
         process_this_frame = not process_this_frame
 
         with lock:
@@ -71,15 +77,31 @@ def generate():
         with lock:
             if output_frame is None:
                 continue
+            #output_frame = cv.resize(output_frame, (0, 0), fx=0.5, fy=0.5)
             (flag, encodedImage) = cv.imencode(".jpg", output_frame)
 
             if not flag:
                 continue
         yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encodedImage) + b'\r\n')
 
-@app.route('/video_feed')
-def video_feed():
+def lepton_generate():
+    global output_lepton_frame
+
+    while True:
+        _, output_lepton_frame = lepton.read()
+        if output_lepton_frame is None:
+            continue
+        (flag, encodedImage) = cv.imencode(".jpg", output_lepton_frame)
+
+        yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encodedImage) + b'\r\n')
+
+@app.route('/picamera_feed')
+def picamera_feed():
     return Response(generate(), mimetype = "multipart/x-mixed-replace; boundary=frame")
+
+@app.route('/lepton_feed')
+def lepton_feed():
+    return Response(lepton_generate(), mimetype = "multipart/x-mixed-replace; boundary=frame")
 
 @app.route('/capture/<username>', methods=['GET'])
 def capture(username):
@@ -88,9 +110,12 @@ def capture(username):
     for i in range(10):
         with lock:
             image = vs.read()
+            can_read_flir_image, flir_image = lepton.read()
         if not os.path.exists(subdirectory):
             os.makedirs(subdirectory)
         cv.imwrite('%s/%s-%s.jpg' % (subdirectory, username, i), image)
+        if can_read_flir_image:
+            cv.imwrite('%s/flir-%s-%s.jpg' % (subdirectory, username, i), flir_image)
     return jsonify(fileList=os.listdir(subdirectory))
      
 
@@ -101,3 +126,4 @@ if __name__ == '__main__':
     app.run()
 
 vs.stop()
+lepton.release()
