@@ -9,10 +9,11 @@ import cv2 as cv
 output_frame = None
 output_lepton_frame = None
 lock = Lock()
-vs = VideoStream(src=2).start()
-#lepton = VideoStream(src=0).start()
+
+vs = cv.VideoCapture(2)
 lepton = cv.VideoCapture(0)
-lepton.set(cv.CAP_PROP_FOURCC, cv.VideoWriter_fourcc('M','J','P','G'))
+#vs.set(cv.CAP_PROP_FOURCC, cv.VideoWriter_fourcc('M','J','P','G'))
+#lepton.set(cv.CAP_PROP_FOURCC, cv.VideoWriter_fourcc('R','G','B','P'))
 
 # Constant
 HAAR_CASCADE_PATH = 'model/haarcascade_frontalface_alt.xml'
@@ -35,21 +36,22 @@ def detect_face():
 
     while True:
         if process_this_frame:
-            frame = vs.read()
-            small_frame = cv.resize(frame, (0, 0), fx=scale, fy=scale)
-            
-            frame_gray = cv.cvtColor(small_frame, cv.COLOR_BGR2GRAY)
-            frame_gray = cv.equalizeHist(frame_gray)
-            faces = face_cascade.detectMultiScale(frame_gray)
+            can_read, frame = vs.read()
+            if can_read:
+                small_frame = cv.resize(frame, (0, 0), fx=scale, fy=scale)
+                
+                frame_gray = cv.cvtColor(small_frame, cv.COLOR_BGR2GRAY)
+                frame_gray = cv.equalizeHist(frame_gray)
+                faces = face_cascade.detectMultiScale(frame_gray)
 
-            for (x,y,w,h) in faces:
-                #print(x,y,w,h)
-                inverted_scale = int(1/scale)
-                rectangle['left'] = x*inverted_scale
-                rectangle['bottom'] = y*inverted_scale
-                rectangle['right'] = rectangle['left'] + w*inverted_scale
-                rectangle['top'] = rectangle['bottom'] + h*inverted_scale
-                #print(rectangle['top'],rectangle['left'],rectangle['right'],rectangle['bottom'])
+                for (x,y,w,h) in faces:
+                    #print(x,y,w,h)
+                    inverted_scale = int(1/scale)
+                    rectangle['left'] = x*inverted_scale
+                    rectangle['bottom'] = y*inverted_scale
+                    rectangle['right'] = rectangle['left'] + w*inverted_scale
+                    rectangle['top'] = rectangle['bottom'] + h*inverted_scale
+                    #print(rectangle['top'],rectangle['left'],rectangle['right'],rectangle['bottom'])
 
         # cv override frame
         cv.rectangle(frame, (rectangle['left'], rectangle['top']), (rectangle['right'], rectangle['bottom']), (0, 0, 255), 2)
@@ -84,32 +86,32 @@ def generate():
                 continue
         yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encodedImage) + b'\r\n')
 
-def lepton_generate():
-    global output_lepton_frame
-
-    while True:
-        _, output_lepton_frame = lepton.read()
-        if output_lepton_frame is None:
-            continue
-        (flag, encodedImage) = cv.imencode(".jpg", output_lepton_frame)
-
-        yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encodedImage) + b'\r\n')
+#def lepton_generate():
+#    global output_lepton_frame
+#
+#    while True:
+#        _, output_lepton_frame = lepton.read()
+#        if output_lepton_frame is None:
+#            continue
+#        (flag, encodedImage) = cv.imencode(".jpg", output_lepton_frame)
+#
+#        yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encodedImage) + b'\r\n')
 
 @app.route('/picamera_feed')
 def picamera_feed():
     return Response(generate(), mimetype = "multipart/x-mixed-replace; boundary=frame")
 
-@app.route('/lepton_feed')
-def lepton_feed():
-    return Response(lepton_generate(), mimetype = "multipart/x-mixed-replace; boundary=frame")
+#@app.route('/lepton_feed')
+#def lepton_feed():
+#    return Response(lepton_generate(), mimetype = "multipart/x-mixed-replace; boundary=frame")
 
 @app.route('/capture/<username>', methods=['GET'])
 def capture(username):
     print('GET capture receive')
     subdirectory = 'capture/%s' % username
-    for i in range(10):
+    for i in range(5):
         with lock:
-            image = vs.read()
+            _, image = vs.read()
             can_read_flir_image, flir_image = lepton.read()
         if not os.path.exists(subdirectory):
             os.makedirs(subdirectory)
@@ -125,5 +127,5 @@ if __name__ == '__main__':
     thread.start()
     app.run()
 
-vs.stop()
+vs.release()
 lepton.release()
