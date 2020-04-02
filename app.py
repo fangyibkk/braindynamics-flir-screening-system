@@ -10,10 +10,12 @@ output_frame = None
 output_lepton_frame = None
 lock = Lock()
 
-vs = cv.VideoCapture(2)
-lepton = cv.VideoCapture(0)
-#vs.set(cv.CAP_PROP_FOURCC, cv.VideoWriter_fourcc('M','J','P','G'))
-#lepton.set(cv.CAP_PROP_FOURCC, cv.VideoWriter_fourcc('R','G','B','P'))
+
+#vs = cv.VideoCapture(2)
+#lepton = cv.VideoCapture(0)
+
+##vs.set(cv.CAP_PROP_FOURCC, cv.VideoWriter_fourcc('M','J','P','G'))
+##lepton.set(cv.CAP_PROP_FOURCC, cv.VideoWriter_fourcc('R','G','B','P'))
 
 # Constant
 HAAR_CASCADE_PATH = 'model/haarcascade_frontalface_alt.xml'
@@ -122,10 +124,10 @@ def capture(username):
      
 
 if __name__ == '__main__':
-    thread = Thread(target=detect_face)
-    thread.daemon = True
-    thread.start()
+    #thread = Thread(target=detect_face)
+    #thread.daemon = True
+    #thread.start()
     app.run()
 
-vs.release()
-lepton.release()
+#vs.release()
+#lepton.release()

@@ -1,5 +1,4 @@
 function httpGet(theUrl) {
-    
     var username = document.getElementById("username").value
     var xhr = new XMLHttpRequest()
     var urlWithParams = theUrl + "/" + username
