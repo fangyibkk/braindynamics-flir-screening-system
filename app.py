@@ -1,5 +1,4 @@
 from flask import Flask, Response, render_template, send_from_directory, jsonify
-from imutils.video import VideoStream
 from threading import Lock, Thread
 from time import sleep
 import os
