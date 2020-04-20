@@ -1,4 +1,4 @@
-from flask import Flask, Response, render_template, send_from_directory, jsonify, send_file
+from flask import Flask, Response, jsonify, send_file
 from threading import Lock, Thread, Event
 from flirpy.camera.lepton import Lepton
 from time import sleep
@@ -6,34 +6,28 @@ from math import sqrt
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2 as cv
-import os
-import shutil
+import os, shutil
 
-#Setting video number
-PI_CAMERA_NUMBER=0
-LEPTON_CAMERA_NUMBER=1
-HAAR_CASCADE_PATH = 'model/haarcascade_frontalface_alt.xml'
+# Global constant
+import project_config as PROJECT_CONFIG
+from routes import views
 
 
 # Global variable
 output_frame = None
 lock = Lock()
 flir_count = 1
+temp_scale = np.loadtxt(PROJECT_CONFIG.TEMPERATURE_CSV_PATH, delimiter=',')
 
 
 # Set up external file/source
-temp_scale = np.loadtxt('temperature.csv', delimiter=',')
-vs = cv.VideoCapture(PI_CAMERA_NUMBER)
-
-app = Flask(__name__)
+#vs = cv.VideoCapture(PROJECT_CONFIG.PI_CAMERA_NUMBER)
+vs = cv.VideoCapture(PROJECT_CONFIG.GSTREAMER_STRING, cv.CAP_GSTREAMER)
 sleep(2.0)
 
 
-def rectangle_distance(old, new):
-    return sqrt(old[top]**2 - new[top]**2) + \
-    sqrt(old[bottom]**2 - new[bottom]**2) + \
-    sqrt(old[left]**2 - new[left]**2) + \
-    sqrt(old[right]**2 - new[right]**2)
+app = Flask(__name__, template_folder='./templates', static_folder='./public')
+app.register_blueprint(views)
 
 
 def detect_face():
@@ -47,7 +41,7 @@ def detect_face():
     rectangle = { 'top':0, 'bottom':0, 'left':0, 'right':0 }
     face_cascade = cv.CascadeClassifier()
 
-    if not face_cascade.load(cv.samples.findFile(HAAR_CASCADE_PATH)):
+    if not face_cascade.load(cv.samples.findFile(PROJECT_CONFIG.HAAR_CASCADE_PATH)):
         print('--(!)Error loading face cascade')
         exit(0)
 
@@ -71,7 +65,6 @@ def detect_face():
         cv.rectangle(frame, (rectangle['left'], rectangle['top']), (rectangle['right'], rectangle['bottom']), (0, 0, 255), 2)
         cv.rectangle(frame, (forehead['left'], forehead['top']), (forehead['right'], forehead['bottom']), (0, 255, 0), 2)
         # NOTE: Default VideoStream() resolution=320 x 240
-        #cv.line(frame, (0,120), (320,120), (0,0,0), 5)
         process_this_frame = not process_this_frame
 
         with lock:
@@ -100,14 +93,6 @@ def generate():
                 continue
         yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encodedImage) + b'\r\n')
 
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/public/<path:path>')
-def send_static(path):
-    return send_from_directory('public', path)
-
 @app.route('/picamera_feed')
 def picamera_feed():
     return Response(generate(), mimetype = "multipart/x-mixed-replace; boundary=frame")
@@ -126,10 +111,11 @@ def capture_thermal():
 
     # setup camera per request
     lepton = Lepton()
+    sleep(1)
 
     setup_empty_dir(subdirectory)
     print('GET received, start capture thermal')
-    flir_image = lepton.grab(device_id=LEPTON_CAMERA_NUMBER)
+    flir_image = lepton.grab(device_id=PROJECT_CONFIG.LEPTON_CAMERA_NUMBER)
     print("Working")
     forehead_roi = flir_image[38:42, 28:32]
     #forehead_roi_gray = np.asarray(cv.cvtColor(forehead_roi, cv.COLOR_BGR2GRAY))
@@ -148,7 +134,6 @@ def capture_thermal():
     lepton.close()
     flir_count += 1
     return jsonify(frame_num=(flir_count-1), temp=lookup_temp)
-
 
 # For setting new img src
 @app.route('/get_thermal/<frame_num>')
